@@ -10,16 +10,16 @@
 - [ ] static file serving
 - [ ] protect routes (auth)
 - [ ] tests
-
   - [ ] unit
   - [ ] e2e
-
 - [ ] layered architecture:
-
   - [ ] models
   - [ ] repositories
   - [ ] services
   - [ ] controllers
+- [ ] [`debug`](https://github.com/visionmedia/debug)
+
+Extra
 
 - [ ] use TS decorators (for routing & params validation): https://www.typescriptlang.org/docs/handbook/decorators.html
   - [ ] build custom decorators as in https://github.com/senpng/koa-typescript-boilerplate
@@ -29,3 +29,4 @@
 **Refs**
 
 - https://inviqa.com/blog/how-build-basic-api-typescript-koa-and-typeorm
+- https://medium.com/@masnun/typescript-with-koa-part-2-428e82ba4ddb
