@@ -11,3 +11,9 @@ app.use(router.routes()).use(router.allowedMethods());
 app.listen(3000, () => {
   console.log('Koa started');
 });
+
+//#region
+const listRoutes = (r: typeof router) =>
+  r.stack.map((route) => route.methods.map((m) => `${m} ${route.path}`)).flat();
+console.log('Routes registered:', listRoutes(router));
+//#endregion

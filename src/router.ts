@@ -1,12 +1,6 @@
 import Router from 'koa-router';
+import { MoviesController } from './controllers/movies';
 
-const router = new Router();
+export const router = new Router();
 
-// Hello world
-router.get('/', async (ctx, next) => {
-  ctx.body = { msg: 'Hello world!' };
-
-  await next();
-});
-
-export { router };
+router.get('/movies', MoviesController.index);
