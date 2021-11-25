@@ -2,10 +2,17 @@
   "name": "rest-template-koa",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/app.ts",
   "scripts": {
+    "start": "ts-node src/app.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@types/koa": "^2.13.4",
+    "koa": "^2.13.4",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.2"
+  }
 }
