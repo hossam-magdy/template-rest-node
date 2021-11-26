@@ -11,7 +11,7 @@ import Joi from 'joi';
  *
  * ```ts
  * @Route('GET', '/movies/:id')
- * @Validate({
+ * @Validate({                      // <-----------------------
  *   id: Validate.path().number().required().label('Movie ID'),
  *   offset: Validate.query().number().min(0),
  *   limit: Validate.query().number().min(5).max(100).default(10).label('Limit'),
@@ -44,22 +44,24 @@ type ValidatedParamsContext<
   };
 };
 
-type ValueLocation = 'query' | 'body' | 'path';
+type AnyControllerAction = Validate.ControllerAction<any, any, any> &
+  Record<string, any>; // for checking if the controllerAction is already __routed__ (i.e: @Validate above @Route)
 
-type ValidationConfig = Record<string, ValidatorRuleBuilderWithJoiSchema>;
-type ValidatorRuleBuilderWithJoiRoot = Joi.Root & ValidatorRuleBuilder;
-type ValidatorRuleBuilderWithJoiSchema = Joi.Schema &
-  Partial<ValidatorRuleBuilder>;
+type ParameterSource = 'query' | 'body' | 'path';
+
+type ValidationSchemaBuilderWithJoiRoot = Joi.Root & ValidationSchemaBuilder;
+type ValidationSchemaBuilderWithJoiSchema = Joi.Schema &
+  Partial<ValidationSchemaBuilder>;
+
+type ValidationConfig = Record<string, ValidationSchemaBuilderWithJoiSchema>;
 //#endregion
 
-class ValidatorRuleBuilder {
-  private schema: Joi.Root;
+class ValidationSchemaBuilder {
+  private schema = Joi;
 
-  constructor(public location: ValueLocation) {
-    this.schema = Joi;
-
-    // This is to Proxy any method calls into Joi
-    // The typings (for autocompletion) are handled too, separately
+  constructor(public sources: ParameterSource[]) {
+    // This is to Proxy any method invocations into "Joi"
+    // The typings (i.e: autocompletion) are handled too, separately
     const proxy = new Proxy(this, {
       get(target, name) {
         const valFromSchema = (target.schema as any)[name as any];
@@ -86,28 +88,34 @@ class ValidatorRuleBuilder {
 const runValidation = (config: ValidationConfig, ctx: Context) => {
   const valuesToValidate = {
     query: ctx.request.query,
-    path: ctx.params,
     body: ctx.request.body,
+    path: ctx.params,
   } as const;
+  const extractValue = (paramKey: string, source: ParameterSource) =>
+    valuesToValidate[source] && valuesToValidate[source][paramKey];
 
-  const resultEntries = Object.entries(config).map(([k, v]) => {
+  const resultEntries = Object.entries(config).map(([paramKey, builder]) => {
     // Proxy already works. This is just for typings
-    if (!v.location || !v.getSchema) throw '';
+    if (!builder.sources || !builder.getSchema) throw '';
 
-    const value =
-      valuesToValidate[v.location] && valuesToValidate[v.location][k];
+    const value = builder.sources
+      .map((source) => extractValue(paramKey, source))
+      .find((v) => !!v);
+
     // console.log({ value });
     try {
-      const validationResult = v.getSchema().validate(value);
-      return [k, validationResult] as const;
-    } catch (e) {
-      console.error('[ERROR] unexpected error in runValidation', { e, v });
-      throw e;
+      const validationResult = builder.getSchema().validate(value);
+      return [paramKey, validationResult] as const;
+    } catch (error) {
+      console.error('[ERROR] unexpected error in runValidation', {
+        error,
+        builder,
+      });
+      throw error;
     }
   });
 
   const hasErrors = resultEntries.some(([, v]) => !!v.error);
-
   if (hasErrors) {
     const errors = Object.fromEntries(
       resultEntries.map(([k, v]) => [k, v.error?.message])
@@ -123,50 +131,49 @@ const runValidation = (config: ValidationConfig, ctx: Context) => {
     throw warnings;
   }
 
-  const values = Object.fromEntries<typeof valuesToValidate>(
+  const validatedParams = Object.fromEntries(
     resultEntries.map(([k, v]) => [k, v.value])
-  );
-  ctx.validatedParams = values;
+  ) as ValidatedParamsContext['validatedParams'];
+  return validatedParams;
 };
 
-export const Validate = (config: ValidationConfig) => {
-  type AnyControllerAction = Validate.ControllerAction<any, any, any> &
-    Record<string, any>; // for checking if the controllerAction is already __routed__ (i.e: @Validate above @Route)
-
-  const getControllerActionWithValidation = (
-    origControllerAction: AnyControllerAction,
-    controllerActionPath: string
-  ): AnyControllerAction => {
-    if (origControllerAction.__routed__) {
-      throw Error(
-        `[ERROR] @Route decorator must be the top-most one (${controllerActionPath})`
-      );
+const wrapControllerActionWithValidation = <T extends AnyControllerAction>(
+  validationConfig: ValidationConfig,
+  origControllerAction: T,
+  controllerActionPath: string
+): T => {
+  if (origControllerAction.__routed__) {
+    throw Error(
+      `[ERROR] @Validator decorator must be below the @Route; Preferably @Route to be the top-most; (${controllerActionPath})`
+    );
+  }
+  const newControllerAction: AnyControllerAction = (ctx, next) => {
+    try {
+      ctx.validatedParams = runValidation(validationConfig, ctx);
+      return origControllerAction(ctx, next);
+    } catch (errors) {
+      ctx.status = 400;
+      ctx.body = { message: 'Validation Error', errors };
     }
-    const newControllerAction: AnyControllerAction = (ctx, next) => {
-      try {
-        runValidation(config, ctx);
-        return origControllerAction(ctx, next);
-      } catch (errors) {
-        ctx.status = 400;
-        ctx.body = { message: 'Validation Error', errors };
-      }
-    };
-
-    newControllerAction.__validated__ = true;
-    return newControllerAction;
   };
 
-  return (
+  Object.assign(newControllerAction, { __validated__: true });
+  return newControllerAction as T;
+};
+
+export const Validate = (validationConfig: ValidationConfig) => {
+  return <T extends AnyControllerAction>(
     target: any,
     propertyName: string,
-    descriptor?: TypedPropertyDescriptor<AnyControllerAction>
+    descriptor?: TypedPropertyDescriptor<T>
   ) => {
     const controllerActionPath = `${target.name}.${propertyName}`;
 
     // for methods/regular-functions. I.e: class SampleController { static index(ctx) { … } }
-    if (descriptor && descriptor.value) {
+    if (descriptor && typeof descriptor.value === 'function') {
       const origControllerAction = descriptor.value;
-      descriptor.value = getControllerActionWithValidation(
+      descriptor.value = wrapControllerActionWithValidation(
+        validationConfig,
         origControllerAction,
         controllerActionPath
       );
@@ -176,22 +183,25 @@ export const Validate = (config: ValidationConfig) => {
     // for properties/arrow-functions. I.e: class SampleController { static index = (ctx) => { … } }
     if (typeof target[propertyName] === 'function') {
       const origControllerAction = target[propertyName];
-      target[propertyName] = getControllerActionWithValidation(
+      target[propertyName] = wrapControllerActionWithValidation(
+        validationConfig,
         origControllerAction,
         controllerActionPath
       );
       return;
     }
 
-    throw '[ERROR] Cannot find the controller action method';
+    throw `[ERROR] Cannot find the controller-action method (${controllerActionPath})`;
   };
 };
 
-Validate.from = (location: ValueLocation) =>
-  new ValidatorRuleBuilder(location) as ValidatorRuleBuilderWithJoiRoot;
-Validate.query = () => Validate.from('query');
-Validate.body = () => Validate.from('body');
-Validate.path = () => Validate.from('path');
+Validate.from = (prioritizedSources: ParameterSource[]) =>
+  new ValidationSchemaBuilder(
+    prioritizedSources
+  ) as ValidationSchemaBuilderWithJoiRoot;
+Validate.query = () => Validate.from(['query']);
+Validate.body = () => Validate.from(['body']);
+Validate.path = () => Validate.from(['path']);
 Validate.schema = Joi;
 
 export namespace Validate {
@@ -201,7 +211,7 @@ export namespace Validate {
     BodyParamsT = unknown,
     PathParamsT = {}
   > = NonValidatedControllerAction<
-    any, // TODO do not change type of state
+    any,
     ValidatedParamsContext<QueryParamsT, BodyParamsT, PathParamsT>,
     unknown
   >;
@@ -209,7 +219,7 @@ export namespace Validate {
   // for usage is controllers
   export type Context<
     QueryParamsT = ParsedUrlQuery,
-    BodyParamsT = {},
-    PathParamsT = unknown
+    BodyParamsT = unknown,
+    PathParamsT = {}
   > = Parameters<ControllerAction<QueryParamsT, BodyParamsT, PathParamsT>>[0];
 }
