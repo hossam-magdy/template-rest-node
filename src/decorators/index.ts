@@ -1,2 +1,2 @@
-export * from './Route';
-export * from './Validate';
+export * from './Route.decorator';
+export * from './Validate.decorator';
