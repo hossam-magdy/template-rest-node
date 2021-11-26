@@ -2,8 +2,7 @@ import Koa from 'koa';
 import { listRoutes } from '@/helpers';
 import { composedMiddlewares } from '@/middlewares';
 import { router } from '@/router';
-
-const PORT = 3000;
+import { PORT } from './config';
 
 const app = new Koa();
 
