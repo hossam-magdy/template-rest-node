@@ -15,7 +15,7 @@
   - [ ] unit
   - [ ] e2e
 - [ ] layered architecture:
-  - [ ] models
+  - [ ] models (~ use TypeORM, Prisma, …)
   - [ ] repositories
   - [ ] services
   - [ ] controllers

@@ -2,6 +2,8 @@ import { ControllerAction } from '@/types';
 
 type Method = 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH';
 
+type InternalControllerAction = ControllerAction<any, any, any>;
+
 type DecoratedRoute = {
   method: Method;
   path: string;
@@ -16,7 +18,7 @@ export const Route = (method: Method, path: string) => {
   return (
     target: any,
     propertyName: string,
-    descriptor?: TypedPropertyDescriptor<ControllerAction>
+    descriptor?: TypedPropertyDescriptor<InternalControllerAction>
   ) => {
     // console.log({ target, propertyName, descriptor });
     const controllerAction =
