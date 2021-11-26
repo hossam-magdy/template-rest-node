@@ -1,3 +1,4 @@
-import Koa from 'koa';
+import { Context } from 'koa';
 
-export type ControllerAction = Koa.Middleware;
+export { Context };
+export type ControllerAction = (ctx: Context) => void | Promise<void>;

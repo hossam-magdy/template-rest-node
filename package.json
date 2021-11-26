@@ -4,8 +4,8 @@
   "description": "",
   "main": "src/app.ts",
   "scripts": {
-    "start": "ts-node src/app.ts",
-    "start-watch": "nodemon --watch '**/*' -e 'ts,js' --ignore '**/*.{spec,test}.{ts,js}' --exec 'yarn start'",
+    "start": "ts-node -r tsconfig-paths/register src/app.ts",
+    "start-watch": "nodemon --watch '**/*' -e 'ts,js,json' --ignore '**/*.{spec,test}.{ts,js}' --exec 'yarn start'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -27,6 +27,7 @@
     "koa-static": "^4.0.2",
     "nodemon": "^2.0.15",
     "ts-node": "^10.4.0",
+    "tsconfig-paths": "^3.12.0",
     "typescript": "^4.5.2"
   }
 }

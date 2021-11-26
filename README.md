@@ -4,11 +4,11 @@
 
 - [ ] routing
 - [ ] params validation
+- [ ] IoC container
 - [ ] db connection
 - [ ] Exceptions/Errors
-- [ ] IoC container
 - [ ] static file serving
-- [ ] protect routes (auth)
+- [ ] protect routes (auth) (`passport`, `koa-passport`)
 - [ ] tests
   - [ ] unit
   - [ ] e2e
@@ -30,3 +30,5 @@ Extra
 
 - https://inviqa.com/blog/how-build-basic-api-typescript-koa-and-typeorm
 - https://medium.com/@masnun/typescript-with-koa-part-2-428e82ba4ddb
+- http://nodeframework.com/
+- https://medium.com/@magnusjt/ioc-container-in-nodejs-e7aea8a89600
