@@ -3,9 +3,9 @@
 **Checklist**
 
 - [x] routing
-- [ ] params validation
+- [x] params validation
   - [x] use decorator
-  - [ ] validator implementation, ex: [here](https://ranvir.xyz/blog/how-to-write-a-request-parameter-validation-middleware-in-node.js)
+  - [x] validator implementation, ex: [here](https://ranvir.xyz/blog/how-to-write-a-request-parameter-validation-middleware-in-node.js)
 - [ ] IoC container
 - [ ] db connection
 - [ ] Exceptions/Errors
