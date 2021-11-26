@@ -10,7 +10,10 @@
 - [ ] db connection
 - [ ] Exceptions/Errors
 - [x] static file serving
-- [ ] protect routes (auth) (`passport`, `koa-passport`)
+- [ ] ~ protect routes (auth) (`passport`, `koa-passport`)
+- [ ] ~ CLI commands: (`yarn routes`)
+- [ ] ~ Workers (launched from _yarn script_, listening to any AMQP brokers)
+- [ ] ~ CronJobs (launched from _yarn script_)
 - [ ] tests
   - [ ] unit
   - [ ] e2e
@@ -18,7 +21,7 @@
   - [ ] models (~ use TypeORM, Prisma, …)
   - [ ] repositories
   - [ ] services
-  - [ ] controllers
+  - [x] controllers
 - [ ] [`debug`](https://github.com/visionmedia/debug)
 
 Extra
