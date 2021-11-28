@@ -3,6 +3,7 @@ import {
   ControllerAction as NonValidatedControllerAction,
 } from '@/types';
 import Joi from 'joi';
+import { extractControllerAction } from './extractControllerAction';
 
 /**
  * - Exmple usage of the decorator:
@@ -31,20 +32,9 @@ import Joi from 'joi';
  */
 
 //#region types
-type ParsedUrlQuery = NodeJS.Dict<string | string[]>;
-type ValidatedParamsContext<
-  QueryParamsT = ParsedUrlQuery,
-  BodyParamsT = unknown,
-  PathParamsT = {}
-> = {
-  validatedParams: {
-    query: QueryParamsT;
-    body: BodyParamsT;
-    path: PathParamsT;
-  };
-};
+type ValidatedParamsContext<ParamsT> = { validatedParams: ParamsT };
 
-type AnyControllerAction = Validate.ControllerAction<any, any, any> &
+type AnyControllerAction = NonValidatedControllerAction<any, any, any> &
   Record<string, any>; // for checking if the controllerAction is already __routed__ (i.e: @Validate above @Route)
 
 type ParameterSource = 'query' | 'body' | 'path';
@@ -133,7 +123,7 @@ const runValidation = (config: ValidationConfig, ctx: Context) => {
 
   const validatedParams = Object.fromEntries(
     resultEntries.map(([k, v]) => [k, v.value])
-  ) as ValidatedParamsContext['validatedParams'];
+  );
   return validatedParams;
 };
 
@@ -149,7 +139,9 @@ const wrapControllerActionWithValidation = <T extends AnyControllerAction>(
   }
   const newControllerAction: AnyControllerAction = (ctx, next) => {
     try {
-      ctx.validatedParams = runValidation(validationConfig, ctx);
+      const validatedParams = runValidation(validationConfig, ctx);
+      // console.log({ validatedParams });
+      ctx.validatedParams = validatedParams;
       return origControllerAction(ctx, next);
     } catch (errors) {
       ctx.status = 400;
@@ -157,41 +149,35 @@ const wrapControllerActionWithValidation = <T extends AnyControllerAction>(
     }
   };
 
-  Object.assign(newControllerAction, { __validated__: true });
+  Object.assign(newControllerAction, {
+    ...origControllerAction, // extracts all meta data from orig function; Not to lose ".__deferred__" for example
+    __validated__: true,
+  });
   return newControllerAction as T;
 };
 
-export const Validate = (validationConfig: ValidationConfig) => {
-  return <T extends AnyControllerAction>(
+export const Validate = <T extends ValidationConfig>(validationConfig: T) => {
+  type Action = Validate.ControllerAction<Record<keyof T, any>>;
+  return (
     target: any,
     propertyName: string,
-    descriptor?: TypedPropertyDescriptor<T>
+    descriptor: TypedPropertyDescriptor<Action>
   ) => {
     const controllerActionPath = `${target.name}.${propertyName}`;
 
-    // for methods/regular-functions. I.e: class SampleController { static index(ctx) { … } }
-    if (descriptor && typeof descriptor.value === 'function') {
-      const origControllerAction = descriptor.value;
-      descriptor.value = wrapControllerActionWithValidation(
-        validationConfig,
-        origControllerAction,
-        controllerActionPath
-      );
-      return;
-    }
+    const { controllerAction, setControllerAction } = extractControllerAction(
+      target,
+      propertyName,
+      descriptor
+    );
 
-    // for properties/arrow-functions. I.e: class SampleController { static index = (ctx) => { … } }
-    if (typeof target[propertyName] === 'function') {
-      const origControllerAction = target[propertyName];
-      target[propertyName] = wrapControllerActionWithValidation(
+    setControllerAction(
+      wrapControllerActionWithValidation(
         validationConfig,
-        origControllerAction,
+        controllerAction,
         controllerActionPath
-      );
-      return;
-    }
-
-    throw `[ERROR] Cannot find the controller-action method (${controllerActionPath})`;
+      )
+    );
   };
 };
 
@@ -206,20 +192,11 @@ Validate.schema = Joi;
 
 export namespace Validate {
   // for usage is controllers
-  export type ControllerAction<
-    QueryParamsT = ParsedUrlQuery,
-    BodyParamsT = unknown,
-    PathParamsT = {}
-  > = NonValidatedControllerAction<
-    any,
-    ValidatedParamsContext<QueryParamsT, BodyParamsT, PathParamsT>,
-    unknown
-  >;
+  export type ControllerAction<ParamsT = unknown> =
+    NonValidatedControllerAction<any, ValidatedParamsContext<ParamsT>, unknown>;
 
   // for usage is controllers
-  export type Context<
-    QueryParamsT = ParsedUrlQuery,
-    BodyParamsT = unknown,
-    PathParamsT = {}
-  > = Parameters<ControllerAction<QueryParamsT, BodyParamsT, PathParamsT>>[0];
+  export type Context<ParamsT = unknown> = Parameters<
+    ControllerAction<ParamsT>
+  >[0];
 }

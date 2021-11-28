@@ -1,2 +1,3 @@
-export * from './Route.decorator';
-export * from './Validate.decorator';
+export * from './Controller';
+export * from './Route';
+export * from './Validate';

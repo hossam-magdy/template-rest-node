@@ -27,8 +27,13 @@
     "koa-router": "^7.4.0",
     "koa-static": "^4.0.2",
     "nodemon": "^2.0.15",
+    "pg": "^8.7.1",
+    "reflect-metadata": "^0.1.13",
     "ts-node": "^10.4.0",
     "tsconfig-paths": "^3.12.0",
+    "typedi": "^0.10.0",
+    "typeorm": "^0.2.41",
+    "typeorm-typedi-extensions": "^0.4.1",
     "typescript": "^4.5.2"
   }
 }
