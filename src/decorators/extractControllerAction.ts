@@ -52,14 +52,22 @@ export const extractControllerAction = <T>(
     function deferredMethod(...args: any[]) {
       // Resolve "this" (the instance) from DI container
       const instance = Container.get<any>(className);
-      // console.log('method [Container.get]', method);
+      // console.log('[deferredMethod] original method: ', method, '; instance: ', instance);
       return method.call(instance, ...args);
     },
     { __deferred__: true }
   ) as unknown as T & { __deferred__: true };
 
   const controllerAction =
-    isInstance && !method.__deferred__ ? deferredMethod : method;
+    isInstance &&
+    /*
+     * `__deferred__` is an "extra" guard against infinite recursiveness,
+     * which already should not happen, if `method`
+     * in`method.call(instance, ...args)` is the proper value
+     */
+    !method.__deferred__
+      ? deferredMethod
+      : method;
 
   const setControllerAction = (cb: T) => {
     target[propertyName] = cb;

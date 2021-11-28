@@ -140,7 +140,7 @@ const wrapControllerActionWithValidation = <T extends AnyControllerAction>(
   const newControllerAction: AnyControllerAction = (ctx, next) => {
     try {
       const validatedParams = runValidation(validationConfig, ctx);
-      // console.log({ validatedParams });
+      // console.log({ validatedParams }); // can be used to detect infinite recursiveness, within a deffered controller action
       ctx.validatedParams = validatedParams;
       return origControllerAction(ctx, next);
     } catch (errors) {
