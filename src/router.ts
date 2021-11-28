@@ -1,6 +1,6 @@
 import { MoviesController } from '@/controllers/Movies';
 import { Route } from '@/decorators';
-import Router from 'koa-router';
+import Router from '@koa/router';
 
 // Previously, without decorators
 // router.get('/movies', MoviesController.index);
