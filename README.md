@@ -1,11 +1,18 @@
 # Template of a REST application;<br />using Node.Js and TypeScript
 
+### Run
+
+- `make start-db`
+- `yarn`
+- `yarn start`
+
 ### Checklist
 
 - [x] routing
 - [x] validation of params (`query`, `body`, `path`)
   - [x] use decorator
   - [x] validator implementation
+  - [ ] params from `cookie` (`Validate.cookie().…`)
 - [x] DI/IoC container
 - [x] db connection
 - [x] static file serving
@@ -26,7 +33,7 @@
 
 <small>~: optional</small>
 
-### References and resources
+### Refs, resources and decisions overview
 
 <details>
 <summary>Expand/Collapse …</summary>

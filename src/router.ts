@@ -1,12 +1,12 @@
-import { MoviesController } from '@/controllers/Movies';
-import { Route } from '@/decorators';
+import { MoviesController } from '@/controllers/MoviesController';
+import { Route } from '@/utils/decorators';
 import Router from '@koa/router';
 
-// Previously, without decorators
+// Previously / without decorators
 // router.get('/movies', MoviesController.index);
 
 /**
- * This is only to consume imported controllers for TSC to load all their the JS files/modules.
+ * This is only to consume imported controllers for TSC to load all their JS modules/files.
  * So that TSC actually executes the decorators and controllers are registered.
  */
 [MoviesController].forEach((c) => c.name);

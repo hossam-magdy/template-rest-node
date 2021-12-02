@@ -1,6 +1,6 @@
 import 'reflect-metadata'; // for decorators of "typeorm", "typedi", "typeorm-typedi-extensions"
 import Koa from 'koa';
-import { listRoutes } from '@/helpers';
+import { listRoutes } from '@/utils';
 import { composedMiddlewares } from '@/middlewares';
 import { router } from '@/router';
 import { PORT } from './config';

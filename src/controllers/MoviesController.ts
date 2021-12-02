@@ -1,8 +1,9 @@
-import { Controller, Route, Validate } from '@/decorators';
-import { MoviesService } from '@/services/Movies';
+import { MoviesService } from '@/services/MoviesService';
+import { Controller, Route, Validate } from '@/utils/decorators';
 
 @Controller()
 export class MoviesController {
+  // moviesService is auto-wired and injected via DI/IoC
   constructor(private moviesService: MoviesService) {}
 
   // GET /movies?genre=Science+Fiction&offset=0&limit=10

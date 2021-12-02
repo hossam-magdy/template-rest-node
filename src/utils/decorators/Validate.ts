@@ -191,11 +191,11 @@ Validate.path = () => Validate.from(['path']);
 Validate.schema = Joi;
 
 export namespace Validate {
-  // for usage is controllers
+  // for usage in controllers
   export type ControllerAction<ParamsT = unknown> =
     NonValidatedControllerAction<any, ValidatedParamsContext<ParamsT>, unknown>;
 
-  // for usage is controllers
+  // for usage in controllers
   export type Context<ParamsT = unknown> = Parameters<
     ControllerAction<ParamsT>
   >[0];

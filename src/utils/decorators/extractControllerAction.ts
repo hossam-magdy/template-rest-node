@@ -62,8 +62,8 @@ export const extractControllerAction = <T>(
     isInstance &&
     /*
      * `__deferred__` is an "extra" guard against infinite recursiveness,
-     * which already should not happen, if `method`
-     * in`method.call(instance, ...args)` is the proper value
+     * which already should not happen, if `method` as
+     * in `method.call(instance, ...args)` is the proper value
      */
     !method.__deferred__
       ? deferredMethod
