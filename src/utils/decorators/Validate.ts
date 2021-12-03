@@ -16,9 +16,9 @@ import { extractControllerAction } from './extractControllerAction';
  *   id: Validate.path().number().required().label('Movie ID'),
  *   offset: Validate.query().number().min(0),
  *   limit: Validate.query().number().min(5).max(100).default(10).label('Limit'),
- *   //  def: Validate.query().number().integer().min(1900).max(2013).required(),
- *   //  ghi: Validate.body().string().email(),
- *   //  jkl: Validate.body().array().items(Validate.schema.number()).required(),
+ *   //  def: Validate.body().number().integer().min(1900).max(2013).required(),
+ *   //  ghi: Validate.cookies().string().email(),
+ *   //  jkl: Validate.from(['body', 'query']).array().items(Validate.schema.number()).required(),
  * })
  * static index(
  *   ctx: ValidatedContext<{ offset: number; limit: number }, {}, { id: number }>
@@ -37,7 +37,7 @@ type ValidatedParamsContext<ParamsT> = { validatedParams: ParamsT };
 type AnyControllerAction = NonValidatedControllerAction<any, any, any> &
   Record<string, any>; // for checking if the controllerAction is already __routed__ (i.e: @Validate above @Route)
 
-type ParameterSource = 'query' | 'body' | 'path';
+type ParameterSource = 'query' | 'body' | 'path' | 'cookies';
 
 type ValidationSchemaBuilderWithJoiRoot = Joi.Root & ValidationSchemaBuilder;
 type ValidationSchemaBuilderWithJoiSchema = Joi.Schema &
@@ -81,8 +81,11 @@ const runValidation = (config: ValidationConfig, ctx: Context) => {
     body: ctx.request.body,
     path: ctx.params,
   } as const;
-  const extractValue = (paramKey: string, source: ParameterSource) =>
-    valuesToValidate[source] && valuesToValidate[source][paramKey];
+  const extractValue = (paramKey: string, source: ParameterSource) => {
+    return source === 'cookies'
+      ? ctx.cookies.get(paramKey)
+      : valuesToValidate[source] && valuesToValidate[source][paramKey];
+  };
 
   const resultEntries = Object.entries(config).map(([paramKey, builder]) => {
     // Proxy already works. This is just for typings
@@ -90,6 +93,7 @@ const runValidation = (config: ValidationConfig, ctx: Context) => {
 
     const value = builder.sources
       .map((source) => extractValue(paramKey, source))
+      // Return the first found value, from the list of the prioritized sources/fromField (body, query, …)
       .find((v) => !!v);
 
     // console.log({ value });
@@ -188,6 +192,7 @@ Validate.from = (prioritizedSources: ParameterSource[]) =>
 Validate.query = () => Validate.from(['query']);
 Validate.body = () => Validate.from(['body']);
 Validate.path = () => Validate.from(['path']);
+Validate.cookies = () => Validate.from(['cookies']);
 Validate.schema = Joi;
 
 export namespace Validate {

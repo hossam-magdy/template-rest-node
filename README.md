@@ -12,7 +12,7 @@
 - [x] validation of params (`query`, `body`, `path`)
   - [x] use decorator
   - [x] validator implementation
-  - [ ] params from `cookie` (`Validate.cookie().…`)
+  - [x] params from `cookies` (`Validate.cookies().…`)
 - [x] DI/IoC container
 - [x] db connection
 - [x] static file serving
