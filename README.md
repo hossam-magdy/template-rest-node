@@ -26,6 +26,10 @@
 - [ ] tests
   - [ ] unit
   - [ ] e2e
+- [ ] supporting custom route-specific middlewares (`@Middleware(...)` decorator)
+- [ ] caching (redis, memcached, ...), check solutions (packages, CacheProviderService)
+- [ ] config, through env and/or json
+- [ ] extract warm-up/initialize fn (including dbConnect() Promise, ...)
 - [ ] ~ protect routes (authentication) (`passport`, `koa-passport`)
 - [ ] ~ CLI commands: (`yarn routes`)
 - [ ] ~ Workers (launched from _yarn script_, listening to any AMQP/message brokers)
